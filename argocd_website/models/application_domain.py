@@ -1,6 +1,6 @@
 import logging
 
-from odoo import models
+from odoo import fields, models
 
 _logger = logging.getLogger(__name__)
 
@@ -12,6 +12,16 @@ except ImportError as err:
 
 class Application(models.Model):
     _inherit = "argocd.application.domain"
+
+    dns_cname_expected = fields.Char(
+        help="Expected value of the CNAME record when checking if a change to the domain is valid",
+        compute="_compute_dns_cname_expected",
+    )
+
+    def _compute_dns_cname_expected(self):
+        # Compute once
+        for domain in self.filtered(lambda d: not d.dns_cname_expected and d.url):
+            domain.dns_cname_expected = domain.name
 
     def dns_check(self, domain):
         """
